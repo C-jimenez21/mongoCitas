@@ -1,0 +1,41 @@
+use("DB_CITAS_V1")
+db.createCollection("Usuario", {
+    capped: true,
+    size: 5000,
+    max: 50,
+    validator:{
+        $jsonSchema:{
+            bsonType: "object",
+            additionalProperties: false,
+            required : ['usu_id', 'usu_nombre', 'usu_segdo_nombre', 'usu_primer_apellido_usuar', 'usu_segdo_apellido_usuar', 'usu_telefono', 'usu_direccion', 'usu_email', 'usu_tipodoc', 'usu_genero', 'usu_acudiente'],
+            properties:{
+                usu_id:{
+                    bsonType: 'int',
+                    description : "El ID_USUARIO es un parametro obligatorio y debe ser un entero"
+                }
+            }
+        }
+    }
+})
+
+
+
+// {
+//     $jsonSchema: {
+//        required: [ "item", "qty", "instock" ],
+//        properties: {
+//           item: { bsonType: "string" },
+//           qty: { bsonType: "int" },
+//           size: {
+//              bsonType: "object",
+//              required: [ "uom" ],
+//              properties: {
+//                 uom: { bsonType: "string" },
+//                 h: { bsonType: "double" },
+//                 w: { bsonType: "double" }
+//              }
+//            },
+//            instock: { bsonType: "bool" }
+//        }
+//     }
+//  }
