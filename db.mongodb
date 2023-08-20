@@ -3,7 +3,8 @@ db.createCollection("counters");
 db.counters.insertMany([
     {_id : "UsuarioId", sequence_value : 0},
     {_id : "MedicoId", sequence_value : 0},
-    {_id : "CitaId", sequence_value : 0}
+    {_id : "CitaId", sequence_value : 0},
+    {_id : "RolesId", sequence_value : 0}
 ]);
 
 function siguienteId(coleccion) {
@@ -401,3 +402,72 @@ db.Cita.insertMany([ {
       "cit_medico": 3
     }
   ])
+
+  
+db.createCollection("Roles", {
+    capped: true,
+    size: 5000,
+    max: 50,
+    validator:{
+        $jsonSchema:{
+            bsonType: "object",
+            additionalProperties: false,
+            required : ['_id', 'email_registro', 'password_registro','rol_name','rol_access'],
+            properties:{
+                _id:{
+                    bsonType: 'int',
+                    description : "El ID_ROL es un parametro obligatorio y debe ser un entero"
+                },
+                usuario_nickname:{  
+                    bsonType: 'string',
+                    description : "El ROL_NICKNAME es un parametro obligatorio y debe ser un string"
+                },
+                email_registro:{  
+                    bsonType: 'string',
+                    description : "El ROL_EMAIL es un parametro obligatorio y debe ser un string"
+                },
+                password_registro:{  
+                    bsonType: 'string',
+                    description : "El ROL_PASSWORD es un parametro obligatorio y debe ser un string"
+                },
+                rol_name:{  
+                    bsonType: 'string',
+                    description : "El NOMBRE_ROL es un parametro obligatorio y debe ser un string"
+                },
+                rol_access:{  
+                    bsonType: 'array',
+                    description : "El ACCESO_ROLES es un parametro obligatorio y debe ser un ARRAY"
+                }
+            }
+        }
+    }
+})
+
+  
+  db.Roles.insertMany([
+    {
+        "_id": siguienteId("Roles"),
+        "usuario_nickname": "paciente1",
+        "email_registro": "paciente1@example.com",
+        "password_registro": "paciente123",
+      "rol_name": "Paciente",
+      "rol_access": ["Usuario", "Cita"]
+    },
+    {
+      "_id": siguienteId("Roles"),
+      "usuario_nickname": "admin1",
+      "email_registro": "admin@example.com",
+      "password_registro": "admin123",
+      "rol_name": "Administrador",
+      "rol_access": ["Usuario", "Cita", "Medico"]
+    },
+    {
+      "_id": siguienteId("Roles"),
+      "usuario_nickname": "medico1",
+      "email_registro": "medico1@example.com",
+      "password_registro": "medico123",
+      "rol_name": "Médico",
+      "rol_access":["Medico", "Cita"]
+    }
+  ]);
+  
