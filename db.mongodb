@@ -1,4 +1,21 @@
-use("DB_CITAS_V1")
+use("DB_CITAS_V1");
+db.createCollection("counters");
+db.counters.insertMany([
+    {_id : "UsuarioId", sequence_value : 0},
+    {_id : "MedicoId", sequence_value : 0},
+    {_id : "CitaId", sequence_value : 0}
+]);
+
+function siguienteId(coleccion) {
+    const sequenceDocument = db.counters.findOneAndUpdate(
+        { _id: `${coleccion}Id` },
+        { $inc: { sequence_value: 1 } },
+        { returnDocument: "after" }
+    );
+    return Number(sequenceDocument.sequence_value);
+};
+
+
 db.createCollection("Usuario", {
     capped: true,
     size: 5000,
@@ -7,35 +24,380 @@ db.createCollection("Usuario", {
         $jsonSchema:{
             bsonType: "object",
             additionalProperties: false,
-            required : ['usu_id', 'usu_nombre', 'usu_segdo_nombre', 'usu_primer_apellido_usuar', 'usu_segdo_apellido_usuar', 'usu_telefono', 'usu_direccion', 'usu_email', 'usu_tipodoc', 'usu_genero', 'usu_acudiente'],
+            required : ['_id', 'usu_nombre', 'usu_primer_apellido_usuar', 'usu_telefono', 'usu_email', 'usu_tipodoc', 'usu_genero', 'usu_acudiente'],
             properties:{
-                usu_id:{
+                _id:{
                     bsonType: 'int',
-                    description : "El ID_USUARIO es un parametro obligatorio y debe ser un entero"
+                    description : "El ID_PACIENTE es un parametro obligatorio y debe ser un entero"
+                },
+                usu_nombre:{  
+                    bsonType: 'string',
+                    description : "El PRIMER_NOMBRE_PACIENTE es un parametro obligatorio y debe ser un string"
+                },
+                usu_segdo_nombre:{  
+                    bsonType: 'string',
+                    description : "El SEGUNDO_NOMBRE_PACIENTE es un parametro obligatorio y debe ser un string"
+                },
+                usu_primer_apellido_usuar:{  
+                    bsonType: 'string',
+                    description : "El PRIMER_APELLIDO_PACIENTE es un parametro obligatorio y debe ser un string"
+                },
+                usu_segdo_apellido_usuar:{  
+                    bsonType: 'string',
+                    description : "El SEGUNDO_APELLIDO_PACIENTE es un parametro obligatorio y debe ser un string"
+                },
+                usu_telefono:{
+                    bsonType: 'int',
+                    description : "El TELEFONO_PACIENTE es un parametro obligatorio y debe ser un entero"
+                },
+                usu_direccion:{
+                    bsonType: 'string',
+                    description : "La DIRECCION_PACIENTE es un parametro obligatorio y debe ser un string"
+                },
+                usu_email:{
+                    bsonType: 'string',
+                    description : "El EMAIL_PACIENTE es un parametro obligatorio y debe ser un email valido"
+                },
+                usu_tipodoc:{
+                    bsonType: "object",
+                    required : ['tipdoc_nombre'],
+                    properties:{
+                        tipdoc_nombre:{
+                            enum: ["Cédula","Tarjeta de Identidad","Pasaporte","Cédula de Extranjería","Registro Civil"],
+                            description : "El NOMBRE_TIPO_DOCUMENTO es un parametro obligatorio y debe ser uno valido"
+                        },
+                        tipdoc_abreviatura:{  
+                            bsonType: 'string',
+                            description : "lA ABREVIATURA_TIPO_DOCUMENTO es un parametro obligatorio y debe ser un string"
+                        }
+                    }
+                },
+                usu_genero: {
+                    enum: [ "Masculino", "Femenino", "No Binario"],
+                    description: "El GENERO debe ser Masculino, Femenino, No Binario"
+                },
+                usu_acudiente:{
+                    bsonType: ["object", "null"],
+                    required : ['acu_nombreCompleto', 'acu_telefono'],
+                    properties:{
+                        acu_nombreCompleto:{
+                            bsonType: 'string',
+                            description : "El NOMBRE_ACUDIENTE es un parametro obligatorio y debe ser un string"
+                        },
+                        acu_telefono:{  
+                            bsonType: 'int',
+                            description : "lA TELEFONO_ACUDIENTE es un parametro obligatorio y debe ser un entero"
+                        }, 
+                        acu_direccion:{  
+                            bsonType: 'string',
+                            description : "lA DIRECCION_ACUDIENTE es un parametro obligatorio y debe ser un string"
+                        }
                 }
             }
+        }
         }
     }
 })
 
 
+db.Usuario.insertMany([
+        {
+          "_id":siguienteId("Usuario"),
+          "usu_nombre": "Juan",
+          "usu_primer_apellido_usuar": "Gómez",
+          "usu_telefono": 123456789,
+          "usu_email": "juan@example.com",
+          "usu_tipodoc": {
+            "tipdoc_nombre": "Cédula",
+            "tipdoc_abreviatura": "CC"
+          },
+          "usu_genero": "Masculino",
+          "usu_acudiente":  {
+            "acu_nombreCompleto": "Luisa Fernández",
+            "acu_telefono": 555555555,
+            "acu_direccion": "Calle 123, Ciudad"
+          }
+        },
+        {
+          "_id":siguienteId("Usuario"),
+          "usu_nombre": "María",
+          "usu_primer_apellido_usuar": "Pérez",
+          "usu_telefono": 987654321,
+          "usu_email": "maria@example.com",
+          "usu_tipodoc": {
+            "tipdoc_nombre": "Cédula",
+            "tipdoc_abreviatura": "CC"
+          },
+          "usu_genero": "Femenino",
+          "usu_acudiente": {
+            "acu_nombreCompleto": "Luisa Fernández",
+            "acu_telefono": 555555555,
+            "acu_direccion": "Calle 123, Ciudad"
+          }
+        },
+        {
+            "_id":siguienteId("Usuario"),
+            "usu_nombre": "Carlos",
+            "usu_primer_apellido_usuar": "Ramírez",
+            "usu_telefono": 555111222,
+            "usu_email": "carlos@example.com",
+            "usu_tipodoc": {
+              "tipdoc_nombre": "Pasaporte",
+              "tipdoc_abreviatura": "PP"
+            },
+            "usu_genero": "Masculino",
+            "usu_acudiente": {
+              "acu_nombreCompleto": "Ana Martínez",
+              "acu_telefono": 333333333,
+              "acu_direccion": "Avenida 456, Otra Ciudad"
+            }
+          },
+          {
+            "_id":siguienteId("Usuario"),
+            "usu_nombre": "Laura",
+            "usu_primer_apellido_usuar": "García",
+            "usu_telefono": 777888999,
+            "usu_email": "laura@example.com",
+            "usu_tipodoc": {
+              "tipdoc_nombre": "Cédula",
+              "tipdoc_abreviatura": "CC"
+            },
+            "usu_genero": "Femenino",
+            "usu_acudiente": null
+          },
+          {
+            "_id":siguienteId("Usuario"),
+            "usu_nombre": "Andrés",
+            "usu_primer_apellido_usuar": "López",
+            "usu_telefono": 444555666,
+            "usu_email": "andres@example.com",
+            "usu_tipodoc": {
+              "tipdoc_nombre": "Tarjeta de Identidad",
+              "tipdoc_abreviatura": "TI"
+            },
+            "usu_genero": "Masculino",
+            "usu_acudiente": {
+              "acu_nombreCompleto": "Javier Pérez",
+              "acu_telefono": 111222333,
+              "acu_direccion": "Carrera 789, Otra Ciudad"
+            }
+          }
+])
 
-// {
-//     $jsonSchema: {
-//        required: [ "item", "qty", "instock" ],
-//        properties: {
-//           item: { bsonType: "string" },
-//           qty: { bsonType: "int" },
-//           size: {
-//              bsonType: "object",
-//              required: [ "uom" ],
-//              properties: {
-//                 uom: { bsonType: "string" },
-//                 h: { bsonType: "double" },
-//                 w: { bsonType: "double" }
-//              }
-//            },
-//            instock: { bsonType: "bool" }
-//        }
-//     }
-//  }
+db.createCollection("Medico", {
+    capped: true,
+    size: 5000,
+    max: 50,
+    validator:{
+        $jsonSchema:{
+            bsonType: "object",
+            additionalProperties: false,
+            required : ['_id', 'med_nroMatriculaProfesional', 'med_nombreCompleto', 'med_consultorio','med_especialidad'],
+            properties:{
+                _id:{
+                    bsonType: 'int',
+                    description : "El ID_MEDICO es un parametro obligatorio y debe ser un entero"
+                },
+                med_nroMatriculaProfesional:{  
+                    bsonType: 'int',
+                    description : "El NUMERO_MATRICULA_PROFESIONAL es un parametro obligatorio y debe ser un string"
+                },
+                med_nombreCompleto:{  
+                    bsonType: 'string',
+                    description : "El NOMBRE_COMPLETO_MEDICO es un parametro obligatorio y debe ser un string"
+                },
+                med_consultorio:{  
+                    enum: ["Consultorio 1","Consultorio 2","Consultorio 3","Consultorio 4","Consultorio 5","Consultorio 6","Consultorio 7","Consultorio 8","Consultorio 9","Consultorio 10"],
+                    description : "El CONSULTORIO_MEDICO es un parametro obligatorio y debe ser uno valido"
+                },
+                med_especialidad:{  
+                    bsonType: 'array',
+                    description : "El ESPECIALIDAD_MEDICO es un parametro obligatorio y debe ser un array"
+                }
+        }
+        }
+    }
+})
+
+
+db.Medico.insertMany([
+    {
+      "_id": siguienteId("Medico"),
+      "med_nroMatriculaProfesional": 12345,
+      "med_nombreCompleto": "Dr. Juan Pérez",
+      "med_consultorio": "Consultorio 1",
+      "med_especialidad": ["Pediatría", "Neonatología"]
+    },
+    {
+      "_id": siguienteId("Medico"),
+      "med_nroMatriculaProfesional": 67890,
+      "med_nombreCompleto": "Dra. María González",
+      "med_consultorio": "Consultorio 2",
+      "med_especialidad": ["Ginecología", "Obstetricia"]
+    },
+    {
+      "_id": siguienteId("Medico"),
+      "med_nroMatriculaProfesional": 54321,
+      "med_nombreCompleto": "Dr. Carlos Ramírez",
+      "med_consultorio": "Consultorio 3",
+      "med_especialidad": ["Cirugía General"]
+    },
+    {
+      "_id": siguienteId("Medico"),
+      "med_nroMatriculaProfesional": 98765,
+      "med_nombreCompleto": "Dra. Laura Martínez",
+      "med_consultorio": "Consultorio 4",
+      "med_especialidad": ["Dermatología"]
+    },
+    {
+      "_id": siguienteId("Medico"),
+      "med_nroMatriculaProfesional": 24680,
+      "med_nombreCompleto": "Dr. Andrés López",
+      "med_consultorio": "Consultorio 5",
+      "med_especialidad": ["Cardiología", "Medicina Interna"]
+    }
+  ])
+
+
+  db.createCollection("Cita", {
+    capped: true,
+    size: 5000,
+    max: 50,
+    validator:{
+        $jsonSchema:{
+            bsonType: "object",
+            additionalProperties: false,
+            required : ['_id', 'cit_fecha', 'cit_estadoCita', 'cit_datosUsuario','cit_medico'],
+            properties:{
+                _id:{
+                    bsonType: 'int',
+                    description : "El ID_CITA es un parametro obligatorio y debe ser un entero"
+                },
+                cit_fecha :{  
+                    bsonType: 'date',
+                    description : "El FECHA_CITA es un parametro obligatorio y debe ser un  tipo fecha"
+                },
+                cit_estadoCita:{  
+                    enum: ["Pendiente","Confirmada","Cancelada","En Progreso","Completada"],
+                    description : "El ESTADO_CITA es un parametro obligatorio y debe ser uno valido"
+                },
+                cit_datosUsuario:{  
+                    bsonType: 'int',
+                    description : "El DATOS_PACIENTE es un parametro obligatorio y debe ser un INT"
+                },
+                cit_medico:{  
+                    bsonType: 'int',
+                    description : "El DATOS_MEDICO es un parametro obligatorio y debe ser un INT"
+                }
+        }
+        }
+    }
+})
+
+
+db.Cita.insertMany([ {
+    "_id":siguienteId("Cita"),
+    "cit_fecha": ISODate("2023-08-20"),
+    "cit_estadoCita": "Pendiente",
+    "cit_datosUsuario": 1,
+    "cit_medico": 1
+  },
+  {
+    "_id":siguienteId("Cita"),
+    "cit_fecha": ISODate("2023-08-21"),
+    "cit_estadoCita": "Confirmada",
+    "cit_datosUsuario": 2,
+    "cit_medico": 2
+  },
+  {
+    "_id":siguienteId("Cita"),
+    "cit_fecha": ISODate("2023-08-22"),
+    "cit_estadoCita": "Cancelada",
+    "cit_datosUsuario": 3,
+    "cit_medico": 3
+  },
+  {
+    "_id":siguienteId("Cita"),
+    "cit_fecha": ISODate("2023-08-23"),
+    "cit_estadoCita": "En Progreso",
+    "cit_datosUsuario": 4,
+    "cit_medico": 4
+  },
+  {
+    "_id":siguienteId("Cita"),
+    "cit_fecha": ISODate("2023-08-24"),
+    "cit_estadoCita": "Completada",
+    "cit_datosUsuario": 5,
+    "cit_medico": 5
+  },
+    {
+      "_id":siguienteId("Cita"),
+      "cit_fecha": ISODate("2023-08-25"),
+      "cit_estadoCita": "Pendiente",
+      "cit_datosUsuario": 1,
+      "cit_medico": 5
+    },
+    {
+      "_id":siguienteId("Cita"),
+      "cit_fecha": ISODate("2023-08-26"),
+      "cit_estadoCita": "Confirmada",
+      "cit_datosUsuario": 2,
+      "cit_medico": 4
+    },
+    {
+      "_id":siguienteId("Cita"),
+      "cit_fecha": ISODate("2023-08-27"),
+      "cit_estadoCita": "Cancelada",
+      "cit_datosUsuario": 3,
+      "cit_medico": 3
+    },
+    {
+      "_id":siguienteId("Cita"),
+      "cit_fecha": ISODate("2023-08-28"),
+      "cit_estadoCita": "En Progreso",
+      "cit_datosUsuario": 4,
+      "cit_medico": 2
+    },
+    {
+      "_id":siguienteId("Cita") ,
+      "cit_fecha": ISODate("2023-08-29"),
+      "cit_estadoCita": "Completada",
+      "cit_datosUsuario": 5,
+      "cit_medico": 1
+    },
+    {
+      "_id":siguienteId("Cita") ,
+      "cit_fecha": ISODate("2023-08-30"),
+      "cit_estadoCita": "Pendiente",
+      "cit_datosUsuario": 1,
+      "cit_medico": 2
+    },
+    {
+      "_id":siguienteId("Cita") ,
+      "cit_fecha": ISODate("2023-08-31"),
+      "cit_estadoCita": "Confirmada",
+      "cit_datosUsuario": 2,
+      "cit_medico": 2
+    },
+    {
+      "_id":siguienteId("Cita") ,
+      "cit_fecha": ISODate("2023-09-01"),
+      "cit_estadoCita": "Cancelada",
+      "cit_datosUsuario": 3,
+      "cit_medico": 5
+    },
+    {
+      "_id":siguienteId("Cita") ,
+      "cit_fecha": ISODate("2023-09-02"),
+      "cit_estadoCita": "En Progreso",
+      "cit_datosUsuario": 4,
+      "cit_medico": 1
+    },
+    {
+      "_id":siguienteId("Cita") ,
+      "cit_fecha": ISODate("2023-09-03"),
+      "cit_estadoCita": "Completada",
+      "cit_datosUsuario": 4,
+      "cit_medico": 3
+    }
+  ])
