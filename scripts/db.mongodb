@@ -75,7 +75,7 @@ db.createCollection("Usuario", {
                 },
                 usu_genero: {
                     enum: [ "Masculino", "Femenino", "No Binario"],
-                    description: "El GENERO debe ser Masculino, Femenino, No Binario"
+                    description: "El GENERO_PACIENTE debe ser Masculino, Femenino, No Binario"
                 },
                 usu_acudiente:{
                     bsonType: ["object", "null"],
