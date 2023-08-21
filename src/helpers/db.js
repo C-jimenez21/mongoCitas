@@ -26,8 +26,41 @@ const genCollection = async (coleccion) => {
             throw error;
         }
     }
+
+async function FoundById(collection, id) {
+    try {
+        const coletion = await genCollection(collection);
+        let result = await coletion.findOne({"_id":Number(id)});
+        if(!result){ console.log({"status":404, message: `El ${id} not found in the collection ${collection}`})
+    }
+        return result;
+    } catch (error) {
+        console.log(error);
+    }
+  
+}
+
+
+    const meses ={
+        enero: 0,
+        febrero: 1,
+        marzo: 2,
+        abril: 3,
+        mayo: 4,
+        junio: 5,
+        julio: 6,
+        agosto: 7,
+        septiembre: 8,
+        octubre: 9,
+        noviembre: 10,
+        diciembre: 11
+      };
  
 export {
     genCollection,
-    getNewId
+    getNewId,
+    meses,
+    FoundById
 }
+
+

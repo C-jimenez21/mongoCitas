@@ -382,7 +382,7 @@ db.Cita.insertMany([ {
     },
     {
       "_id":siguienteId("Cita") ,
-      "cit_fecha": ISODate("2023-09-01"),
+      "cit_fecha": ISODate("2023-09-05"),
       "cit_estadoCita": "Cancelada",
       "cit_datosUsuario": 3,
       "cit_medico": 5
@@ -474,7 +474,54 @@ db.createCollection("Roles", {
 
 //Encontrar la próxima cita para un paciente específico (por ejemplo, el paciente con **usu_id 1**):
 use("DB_CITAS_V1")
-db.Cita.findOne({"cit_datosUsuario":1,"cit_fecha" : {$gt: new Date()}})
+db.Medico.findOne({"_id":1})
+use("DB_CITAS_V1")
+db.Cita.aggregate([
+  {$match: {"cit_datosUsuario": 87,"cit_fecha" : {$gt: new Date()}}},
+  {$lookup: {
+    from: "Usuario",
+    localField: "cit_datosUsuario",
+    foreignField: "_id",
+    as: "result"
+  }},{
+    $unwind: "$result"
+  },
+  {$lookup: {
+    from: "Medico",
+    localField: "cit_medico",
+    foreignField: "_id",
+    as: "Medico"
+  }},{
+    $unwind: "$Medico"
+  },
+  {
+    $project:{
+        _id:0,
+        NOMBRE_PACIENTE: "$result.usu_nombre",
+        EMAIL_PACIENTE: "$result.usu_email",
+        NOMBRE_MEDICO: "$Medico.med_nombreCompleto",
+        ESPECIALIDAD_MEDICO: "$Medico.med_especialidad",
+        FECHA_CITA: "$cit_fecha",
+        ESTADO_CITA: "$cit_estadoCita"
+      }
+}])
+
+
+//Obtener todos los médicos de una especialidad específica (por ejemplo, **'Cardiología'**):
+use("DB_CITAS_V1")
+db.Medico.aggregate([
+  {$match: {"med_especialidad":'Neonatolodgía'}},
+  {
+    $project:{
+        _id:0,
+        ID_MEDICO: "$_id",
+        NUMERO_MATRICULA_PROFESIONAL: "$med_nroMatriculaProfesional",
+        NOMBRE_COMPLETO_MEDICO: "$med_nombreCompleto",
+        CONSULTORIO_MEDICO: "$med_consultorio",
+        ESPECIALIDAD_MEDICO: "$med_especialidad"
+      }
+}
+]).toArray();
 
 //Encontrar todos los pacientes que tienen citas con un médico específico (por ejemplo, el médico con **med_nroMatriculaProsional 1**)
 use("DB_CITAS_V1")
@@ -508,4 +555,169 @@ db.Cita.aggregate([
       }
 }])
 
-//
+//Encontrar todas las citas para un día específico (por ejemplo, **'2023-07-12'**)
+use("DB_CITAS_V1")
+db.Cita.aggregate([
+  {$match: {"cit_fecha":{$eq: (new Date("2023-08-24"))}}},
+  {$lookup: {
+    from: "Usuario",
+    localField: "cit_datosUsuario",
+    foreignField: "_id",
+    as: "result"
+  }},{
+    $unwind: "$result"
+  },
+  {$lookup: {
+    from: "Medico",
+    localField: "cit_medico",
+    foreignField: "_id",
+    as: "Medico"
+  }},{
+    $unwind: "$Medico"
+  },
+  {
+    $project:{
+        _id:0,
+        NOMBRE_PACIENTE: "$result.usu_nombre",
+        EMAIL_PACIENTE: "$result.usu_email",
+        NOMBRE_MEDICO: "$Medico.med_nombreCompleto",
+        ESPECIALIDAD_MEDICO: "$Medico.med_especialidad",
+        FECHA_CITA: "$cit_fecha",
+        ESTADO_CITA: "$cit_estadoCita"
+      }
+}])
+
+use("DB_CITAS_V1")
+db.Cita.find({"cit_fecha": {$eq: ISODate("2023-08-24")}})
+//{cit_fecha:{$gte:ISODate("2023-08-24”)},{$lt:ISODate(“2021-04-01”)},
+db.Cita.find({cit_fecha:{$gte:ISODate('2023-08-24'),$lt:ISODate('2023-08-26')}})
+
+//Obtener los médicos y sus consultorios
+use("DB_CITAS_V1")
+db.Medico.aggregate([
+  {
+    $project:{
+        _id:0,
+        CONSULTORIO_MEDICO: "$med_consultorio",
+        NUMERO_MATRICULA_PROFESIONAL: "$med_nroMatriculaProfesional",
+        NOMBRE_COMPLETO_MEDICO: "$med_nombreCompleto",
+      }
+}
+]).toArray();
+
+//Contar el número de citas que un médico tiene en un día específico (por ejemplo, el médico con **med_nroMatriculaProsional 1 en '2023-07-12'**)
+use("DB_CITAS_V1")
+db.Cita.find({"cit_fecha": {$eq: ISODate("2023-08-24")}, "cit_medico": {$eq: 5}})
+
+use("DB_CITAS_V1")
+db.Cita.aggregate([
+  {$match: {"cit_fecha":{$eq: ISODate("2023-08-24")}, "cit_medico": {$eq: 5}}},
+  {$lookup: {
+    from: "Medico",
+    localField: "cit_medico",
+    foreignField: "_id",
+    as: "Medico"
+  }},{
+    $unwind: "$Medico"
+  }, { $group: { _id: "$Medico.med_nombreCompleto", Cantidad_de_citas: { $sum: 1 } } }])
+
+
+
+  //Obtener los consultorio donde se aplicó las citas de un paciente
+  use("DB_CITAS_V1")
+db.Cita.aggregate([
+  {$match: {"cit_datosUsuario":{$eq: 2}}},
+  {$lookup: {
+    from: "Usuario",
+    localField: "cit_datosUsuario",
+    foreignField: "_id",
+    as: "result"
+  }},{
+    $unwind: "$result"
+  },
+  {$lookup: {
+    from: "Medico",
+    localField: "cit_medico",
+    foreignField: "_id",
+    as: "Medico"
+  }},{
+    $unwind: "$Medico"
+  },
+  {
+    $project:{
+        _id:0,
+        NOMBRE_PACIENTE: "$result.usu_nombre",
+        CONSULTORIO_MEDICO: "$Medico.med_consultorio",
+        NOMBRE_MEDICO: "$Medico.med_nombreCompleto",
+       
+      }
+}])
+
+
+//Obtener todas las citas realizadas por los pacientes de un genero si su estado de la cita fue atendidad
+use("DB_CITAS_V1")
+db.Cita.aggregate([
+  {
+    $lookup: {
+      from: "Usuario",
+      localField: "cit_datosUsuario",
+      foreignField: "_id",
+      as: "Paciente"
+    }
+  },{
+    $unwind: "$Paciente"
+  },
+  {$lookup: {
+    from: "Medico",
+    localField: "cit_medico",
+    foreignField: "_id",
+    as: "Medico"
+  }},{
+    $unwind: "$Medico"
+  },
+  {$match: {"Paciente.usu_genero":{$eq: 'Masculino'}, "cit_estadoCita" :{$eq: 'Completada'} }},
+  {
+  $project: {
+    _id: 0,
+    ESTADO_CITA: "$cit_estadoCita",
+    NOMBRE_PACIENTE: "$Paciente.usu_nombre",
+    NOMBRE_MEDICO: "$Medico.med_nombreCompleto",
+    FECHA_CITA: "$cit_fecha"
+  }
+}])
+
+//Mostrar todas las citas que fueron rechazadas y en un mes específico, mostrar la fecha de la cita, el nombre del usuario y el médico.
+use("DB_CITAS_V1")
+db.Cita.aggregate([
+  {$match: {"cit_fecha" :{$gte: new Date(2023, 7, 1),
+      $lt: new Date(2023, 8, 1) 
+},"cit_estadoCita" :{$eq: 'Cancelada'}}},
+  {
+    $lookup: {
+      from: "Usuario",
+      localField: "cit_datosUsuario",
+      foreignField: "_id",
+      as: "Paciente"
+    }
+  },{
+    $unwind: "$Paciente"
+  },
+  {$lookup: {
+    from: "Medico",
+    localField: "cit_medico",
+    foreignField: "_id",
+    as: "Medico"
+  }},{
+    $unwind: "$Medico"
+  },
+  {
+  $project: {
+    _id: 0,
+    ESTADO_CITA: "$cit_estadoCita",
+    NOMBRE_PACIENTE: "$Paciente.usu_nombre",
+    NOMBRE_MEDICO: "$Medico.med_nombreCompleto",
+    FECHA_CITA: "$cit_fecha"
+  }
+}])
+
+
