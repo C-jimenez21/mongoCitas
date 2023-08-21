@@ -65,29 +65,40 @@ export class Usuario {
         }
     }
 
-    async updateUser(user) {
+    async updateUser(id, name, lastnamme, phone, email, doc, avdoc, genre, acuName, acuPhone, acuDic) {
         try {
-            
+            const schema = {
+                "usu_nombre": name,
+                "usu_primer_apellido_usuar": lastnamme,
+                "usu_telefono": phone,
+                "usu_email": email,
+                "usu_tipodoc": {
+                    "tipdoc_nombre": doc,
+                    "tipdoc_abreviatura": avdoc
+                },
+                "usu_genero": genre,
+                "usu_acudiente":  {
+                    "acu_nombreCompleto": acuName,
+                    "acu_telefono": acuPhone,
+                    "acu_direccion": acuDic
+                }
+            }
+                const result = await Collection.updateOne(
+                    { "_id": id },
+                    {$set: schema}
+                );
+            return result; 
         } catch (error) {
-            console.log(error);
+            console.log(error.errInfo.details.schemaRulesNotSatisfied[0]);
         }
     }
 
+    async deleteUser(id) {
+        try {
+                let result = await Collection.deleteOne({ "_id": id });
+            return result; 
+        } catch (error) {
+            console.log(error.errInfo.details.schemaRulesNotSatisfied[0]);
+        }
+    }
 }
-/*
-$project: {
-    id: "$_id",
-    fecha: "$cit_fecha",
-    idEstadoCita: "$cit_estadoCita",
-    idMedico: "$cit_medico",
-    idUsuario: "$cit_datosUsuario",
-    _id: 0
-}
-},
-{
-$sort: {
-    fecha: 1
-}
-}
-]).toArray();
-*/

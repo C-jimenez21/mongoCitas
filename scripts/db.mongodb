@@ -471,3 +471,41 @@ db.createCollection("Roles", {
     }
   ]);
   
+
+//Encontrar la próxima cita para un paciente específico (por ejemplo, el paciente con **usu_id 1**):
+use("DB_CITAS_V1")
+db.Cita.findOne({"cit_datosUsuario":1,"cit_fecha" : {$gt: new Date()}})
+
+//Encontrar todos los pacientes que tienen citas con un médico específico (por ejemplo, el médico con **med_nroMatriculaProsional 1**)
+use("DB_CITAS_V1")
+db.Cita.aggregate([
+  {$match: {"cit_medico":1}},
+  {$lookup: {
+    from: "Usuario",
+    localField: "cit_datosUsuario",
+    foreignField: "_id",
+    as: "result"
+  }},{
+    $unwind: "$result"
+  },
+  {$lookup: {
+    from: "Medico",
+    localField: "cit_medico",
+    foreignField: "_id",
+    as: "Medico"
+  }},{
+    $unwind: "$Medico"
+  },
+  {
+    $project:{
+        _id:0,
+        NOMBRE_PACIENTE: "$result.usu_nombre",
+        EMAIL_PACIENTE: "$result.usu_email",
+        NOMBRE_MEDICO: "$Medico.med_nombreCompleto",
+        ESPECIALIDAD_MEDICO: "$Medico.med_especialidad",
+        FECHA_CITA: "$cit_fecha",
+        ESTADO_CITA: "$cit_estadoCita"
+      }
+}])
+
+//
