@@ -14,6 +14,16 @@ const getAllUsers = async(req, res) => {
     }
 }
 
+const getAllMedicalAppointment = async(req, res) => {
+    try {
+        const inst = new Cita() 
+        const result = await inst.getAllMedicalAppointment();
+        res.send(result);
+    } catch (error) {
+        console.log(error);
+    }
+}
+
 const getMedicByEspecially = async (req, res) => {
     try {
         const {Especialidad} = req.params
@@ -147,5 +157,6 @@ export {
     getAppointmentBySpecificDayAndDoctor,
     getRoomsByUser,
     getAppointmentByGenreAndState,
-    getAppointmentRefuseByday
+    getAppointmentRefuseByday,
+    getAllMedicalAppointment
 }

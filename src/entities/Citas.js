@@ -64,7 +64,7 @@ export class Cita {
                     }
               }]
               let result = await Collection.aggregate(pipeline).toArray();
-              (result.length != 0) ? result  : result= {status: 406, message:"El usuario no tiene agendadas mas citas"}       
+              (result.length != 0) ? result= result[0]  : result= {status: 406, message:"El usuario no tiene agendadas mas citas"}       
               return result
         } catch (error) {
             console.log(error);
@@ -212,7 +212,7 @@ export class Cita {
                   $unwind: "$Medico"
                 }, { $group: { _id: "$Medico.med_nombreCompleto", Cantidad_de_citas: { $sum: 1 } } }]
               let result = await Collection.aggregate(pipeline).toArray();
-              (result.length != 0) ? result  : result= {status: 406, message:"El usuario no tiene agendadas mas citas"}       
+              (result.length != 0) ? result  : result= {status: 406, message:"El Medico no tiene agendadas citas para este dia"}       
               return result
         } catch (error) {
             console.log(error);
